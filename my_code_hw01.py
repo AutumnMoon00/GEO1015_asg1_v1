@@ -4,7 +4,8 @@
 #-- 5722101
 
 import random
-
+import numpy as np
+from scipy.spatial import kdtree
 
 
 def nn_xy(dt, kd, all_z, x, y):
@@ -27,6 +28,7 @@ def nn_xy(dt, kd, all_z, x, y):
     #-- you are *not* allowed to use the function for the nn interpolation that I wrote for startinpy
     #-- you need to write your own code for this step
     z = random.uniform(0, 100)
+
     raise Exception("Outside convex hull")
     return z
 
