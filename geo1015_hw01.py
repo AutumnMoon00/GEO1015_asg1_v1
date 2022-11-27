@@ -10,7 +10,7 @@
 import sys
 import math
 import csv
-import json 
+import json
 import time
 
 import numpy as np
@@ -45,11 +45,11 @@ def main():
         if totall > dt.number_of_vertices():
             print("INFO: {} duplicate points were removed".format(totall - dt.number_of_vertices()))
     #-- fetch all the (clean) points (see https://startinpy.readthedocs.io/en/latest/api.html#startinpy.DT.points)
-    pts = dt.points[1:] 
+    pts = dt.points[1:]
     #-- construct a KD-tree also, for fast nearest neighbours queries
-    kd = scipy.spatial.KDTree(pts[:,:2]) 
+    kd = scipy.spatial.KDTree(pts[:,:2])
     all_z = pts[:,-1]
-    #-- find bbox, we get bbox[minx,miny,maxx,maxy]   
+    #-- find bbox, we get bbox[minx,miny,maxx,maxy]
     bbox = dt.get_bbox()
 
     for key in jparams:
@@ -63,7 +63,7 @@ def main():
                 y = myraster.bbox[1] + (row * myraster.cellsize) + (myraster.cellsize / 2)
                 for col in range(myraster.width):
                     x = myraster.bbox[0] + (col * myraster.cellsize) + (myraster.cellsize / 2)
-                    if   key == 'nn':
+                    if key == 'nn':
                         try:
                             myraster[i][j] = my_code_hw01.nn_xy(dt, kd, all_z, x, y)
                         except Exception as e:
@@ -80,15 +80,15 @@ def main():
                             myraster[i][j] = NO_DATA_VALUE
                     elif key == 'idw':
                         try:
-                            myraster[i][j] = my_code_hw01.idw_xy(dt, kd, all_z, x, y, 
-                                                            jparams[key]['power'], 
+                            myraster[i][j] = my_code_hw01.idw_xy(dt, kd, all_z, x, y,
+                                                            jparams[key]['power'],
                                                             jparams[key]['radius'])
                         except Exception as e:
                             myraster[i][j] = NO_DATA_VALUE
                     j += 1
-                i += 1 
+                i += 1
             myraster.save(jparams[key]['output-file'])
-            print("-->%ss" % round(time.time() - start_time, 2))        
+            print("-->%ss" % round(time.time() - start_time, 2))
 
 
 if __name__ == '__main__':

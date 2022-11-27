@@ -8,6 +8,62 @@ import numpy as np
 from scipy.spatial import kdtree
 
 
+def side_test(x1, y1, x2, y2, xp, yp):
+    d = ((xp - x1) * (y2 - y1)) - ((yp - y1) * (x2 - x1))
+    if d < 0:
+        return -1
+    elif d > 0:
+        return 1
+    elif d == 0:
+        return 0
+
+
+def in_triangle(pts, triangle, pt):
+    """
+    pts = points of the delaunay triangle
+    """
+    # pts = dt.points
+    v1 = triangle[0]
+    x1 = pts[v1][0]
+    y1 = pts[v1][1]
+    v2 = triangle[1]
+    x2 = pts[v2][0]
+    y2 = pts[v2][1]
+    v3 = triangle[2]
+    x3 = pts[v3][0]
+    y3 = pts[v3][1]
+
+    xp = pt[0]
+    yp = pt[1]
+
+    vertices = [v1, v2, v3, v1]
+    stest = 0
+    stest += side_test(x1, y1, x2, y2, xp, yp)
+    stest += side_test(x2, y2, x3, y3, xp, yp)
+    stest += side_test(x3, y3, x1, y1, xp, yp)
+
+    if (stest == 1) or (stest == -1):
+        return False
+    else:
+        return True
+
+
+def in_convexhull(dt, pt):
+    """
+    dt = delaunay triangle
+    pt = query point to check whether its in triangle or not
+
+    return = True or False
+    """
+    trs = dt.triangles
+    pts = dt.points
+    for triangle in trs:
+        if in_triangle(pts, triangle, pt):
+            return True
+
+    return False
+
+
 def nn_xy(dt, kd, all_z, x, y):
     """
     !!! TO BE COMPLETED !!!
@@ -29,7 +85,15 @@ def nn_xy(dt, kd, all_z, x, y):
     #-- you need to write your own code for this step
     z = random.uniform(0, 100)
 
-    raise Exception("Outside convex hull")
+    pt = np.array([float(x), float(y)])
+
+    if not in_convexhull(dt, pt):
+        raise Exception("Outside convex hull")
+
+    dd, ii = kd.query([pt], k=1)
+    z = all_z[ii]
+    # print(all_z)
+
     return z
 
 
