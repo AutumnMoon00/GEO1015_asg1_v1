@@ -5,8 +5,13 @@
 
 import random
 import numpy as np
+import math
 from scipy.spatial import kdtree
 
+
+def dist_2pts(pt1, pt2):
+    dist = math.sqrt((pt1[0]-pt2[0])**2 + (pt1[1]-pt2[1])**2)
+    return dist
 
 def side_test(x1, y1, x2, y2, xp, yp):
     d = ((xp - x1) * (y2 - y1)) - ((yp - y1) * (x2 - x1))
@@ -117,8 +122,23 @@ def idw_xy(dt, kd, all_z, x, y, power, radius):
     """
     #-- kd-tree docs: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html#scipy.spatial.KDTree
     z = random.uniform(0, 100)
-    raise Exception("Outside convex hull")
-    raise Exception("No point in search radius")
+    pt = np.array([float(x), float(y)])
+    if not in_convexhull(dt, pt):
+        raise Exception("Outside convex hull")
+
+    pts_in_r = sorted(kd.query_ball_point(pt, radius))
+    if len(pts_in_r) == 0:
+        raise Exception("No point in search radius")
+
+    pts = dt.points[1:]
+    num = 0
+    den = 0
+    for npts in pts_in_r:
+        w = dist_2pts(pt, pts[npts][:2]) ** (-1 * power)
+        num += w * all_z[npts]
+        den += w
+
+    z = num / den
     return z
 
 

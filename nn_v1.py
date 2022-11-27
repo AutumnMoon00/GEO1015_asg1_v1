@@ -16,6 +16,11 @@ import raster
 # import my_code_hw01
 
 
+def dist_2pts(pt1, pt2):
+    dist = math.sqrt((pt1[0]-pt2[0])**2 + (pt1[1]-pt2[1])**2)
+    return dist
+
+
 def side_test(x1, y1, x2, y2, xp, yp):
     d = ((xp - x1) * (y2 - y1)) - ((yp - y1) * (x2 - x1))
     if d < 0:
@@ -105,6 +110,46 @@ def nn_xy(dt, kd, all_z, x, y):
     return z
 
 
+def idw_xy(dt, kd, all_z, x, y, power, radius):
+    """
+    !!! TO BE COMPLETED !!!
+
+    Function that interpolates with IDW
+
+    Input:
+        dt:     the DT of the input points (a startinpy object)
+        kd:     the kd-tree of the input points
+        all_z:  an array with all the z values, same order as kd.data
+        x:      x-coordinate of the interpolation location
+        y:      y-coordinate of the interpolation location
+        power:  power to use for IDW
+        radius: search radius
+¨    Output:
+        z: the estimation of the height value,
+           (raise Exception if (1) outside convex hull or (2) no point in search radius
+    """
+    # -- kd-tree docs: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html#scipy.spatial.KDTree
+    z = random.uniform(0, 100)
+    pt = np.array([float(x), float(y)])
+    if not in_convexhull(dt, pt):
+        raise Exception("Outside convex hull")
+
+    pts_in_r = sorted(kd.query_ball_point(pt, radius))
+    if len(pts_in_r) == 0:
+        raise Exception("No point in search radius")
+
+    pts = dt.points[1:]
+    num = 0
+    den = 0
+    for npts in pts_in_r:
+        w = dist_2pts(pt, pts[npts][:2]) ** (-1 * power)
+        num += w * all_z[npts]
+        den += w
+
+    z = num / den
+    return z
+
+
 def main():
     # -- read the needed parameters from the file 'params.json' (must be in same folder)
     try:
@@ -135,27 +180,27 @@ def main():
     # -- find bbox, we get bbox[minx,miny,maxx,maxy]
     bbox = dt.get_bbox()
 
-    ## my code
-    # print(pts)
-    # print(all_z)
-    pts = dt.points
-    trs = dt.triangles
-    plt.triplot(pts[:, 0], pts[:, 1], trs)
+    # ## my code
+    # # print(pts)
+    # # print(all_z)
+    # pts = dt.points
+    # trs = dt.triangles
+    # # plt.triplot(pts[:, 0], pts[:, 1], trs)
+    #
+    # bbox = dt.get_bbox()
 
-    bbox = dt.get_bbox()
-
-    print(pts.shape)
-    print(trs.shape)
-    one_triangle = trs[22]
-    # print(one_triangle + np.array([one_triangle[0]]))
-    first_vertex = one_triangle[0]
-    second_vertex = one_triangle[1]
-    third_vertex = one_triangle[2]
-    print(one_triangle)
-    print(first_vertex)
-    print(second_vertex)
-    print(third_vertex)
-    print(dt.points[first_vertex])
+    # print(pts.shape)
+    # print(trs.shape)
+    # one_triangle = trs[22]
+    # # print(one_triangle + np.array([one_triangle[0]]))
+    # first_vertex = one_triangle[0]
+    # second_vertex = one_triangle[1]
+    # third_vertex = one_triangle[2]
+    # print(one_triangle)
+    # print(first_vertex)
+    # print(second_vertex)
+    # print(third_vertex)
+    # print(dt.points[first_vertex])
     # for tri in trs:
     #     print(tri)
 
@@ -166,12 +211,30 @@ def main():
     print(in_convexhull(dt, p))
     print(nn_xy(dt, kd, all_z, px, py))
 
-    # -- the vertex "0" shouldn't be plotted, so start at 1
-    plt.plot(pts[1:, 0], pts[1:, 1], 'o')
+
+    ## idw start
+    pts = dt.points[1:]
+    kd = scipy.spatial.KDTree(pts[:, :2])
+    all_z = pts[:, -1]
+    pts_in_r = kd.query_ball_point(p, 10)
+    # print(sorted(pts_in_r))
+    # print(len(pts_in_r))
+    # print(pts[pts_in_r[0]])
+    num = 0
+    den = 0
+    for npts in pts_in_r:
+        # print(pts[npts])
+        # print(all_z[npts])
+        w = dist_2pts(p, pts[npts][:2])
+        num += w * all_z[npts]
+        den += w**(-1*2)
+
+    z = num/den
+
+    print(idw_xy(dt, kd, all_z, px, py, 2, 15))
+
+    plt.plot(pts[:, 0], pts[:, 1], 'o')
     plt.plot(px, py, '+')
     plt.show()
-
-
-
 
 main()
